@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     
-    @State private var users = [User]()
+    @Query var users: [User]
+    @Environment(\.modelContext) var modelContext
     
     
     var body: some View {
@@ -41,7 +43,6 @@ struct ContentView: View {
     
     
     func fetchData() {
-        print("inside fetchData")
         if let url = URL(string: "https://www.hackingwithswift.com/samples/friendface.json") {
             let request = URLRequest(url: url)
             
@@ -52,9 +53,13 @@ struct ContentView: View {
                 do {
                     let decoder = JSONDecoder()
                     decoder.dateDecodingStrategy = .iso8601
-                    users = try decoder.decode([User].self, from: data)
+                    let usersResponse = try decoder.decode([User].self, from: data)
+                    for user in usersResponse {
+                        modelContext.insert(user)
+                    }
+                    
                 } catch {
-                    users = []
+                    return
                 }
             }.resume()
         }
